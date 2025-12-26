@@ -1,0 +1,23 @@
+# StreamFlow MVP - Test Dockerfile
+# Obraz do uruchamiania testów w CI/CD
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Instaluj zależności systemowe
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Kopiuj requirements i instaluj
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Kopiuj kod
+COPY backend/ ./backend/
+
+WORKDIR /app/backend
+
+# Domyślne polecenie - uruchom testy
+CMD ["pytest", "-v", "--tb=short", "--cov=.", "--cov-report=term-missing"]

@@ -1,0 +1,70 @@
+# StreamFlow MVP - Docker Ignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dane lokalne
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Logi
+*.log
+logs/
+
+# Środowisko
+.env
+.env.local
+.env.*.local
+venv/
+.venv/
+
+# Testy
+coverage/
+test-results/
+.nyc_output/
+
+# Dokumenty wygenerowane (opcjonalne)
+output/
+*.docx
+
+# Git
+.git/
+.gitignore
+
+# Archiwa
+*.zip
+*.tar.gz
+*.rar

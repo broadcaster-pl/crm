@@ -1,0 +1,94 @@
+# StreamFlow MVP - Docker Compose
+# Uruchamianie wszystkich serwisów
+
+version: '3.8'
+
+services:
+  # ============= BACKEND API =============
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: streamflow-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./backend:/app/backend:ro
+    environment:
+      - DATABASE_PATH=/app/data/streamflow.db
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - streamflow-network
+
+  # ============= TESTY =============
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: streamflow-test
+    volumes:
+      - ./backend:/app/backend:ro
+      - ./test-results:/app/test-results
+    environment:
+      - PYTHONUNBUFFERED=1
+    profiles:
+      - test
+    networks:
+      - streamflow-network
+
+  # ============= FRONTEND DEV =============
+  frontend:
+    image: node:20-alpine
+    container_name: streamflow-frontend
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app/src
+      - frontend_node_modules:/app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000/api
+      - CHOKIDAR_USEPOLLING=true
+    command: >
+      sh -c "
+        if [ ! -f package.json ]; then
+          npx create-react-app . --template typescript 2>/dev/null || true
+          npm install lucide-react tailwindcss postcss autoprefixer
+        fi
+        npm start
+      "
+    profiles:
+      - frontend
+    depends_on:
+      - api
+    networks:
+      - streamflow-network
+
+  # ============= DOCUMENT GENERATOR =============
+  docs-generator:
+    image: node:20-alpine
+    container_name: streamflow-docs-generator
+    working_dir: /app
+    volumes:
+      - ./templates:/app
+      - ./output:/app/output
+    command: sh -c "npm install && node document-generator.js"
+    profiles:
+      - generate
+    networks:
+      - streamflow-network
+
+networks:
+  streamflow-network:
+    driver: bridge
+
+volumes:
+  frontend_node_modules:
