@@ -47,8 +47,8 @@ make run
 make docker-build
 make docker-up
 
-# API dostępne pod: http://localhost:8000
-# Swagger UI: http://localhost:8000/docs
+# API dostępne pod: http://localhost:${API_PORT}
+# Swagger UI: http://localhost:${API_PORT}/docs
 ```
 
 ### Opcja 3: Docker Compose
@@ -110,7 +110,7 @@ make docker-test
 - [📋 Struktura projektu](docs/STRUCTURE.md)
 - [🔧 Instrukcja instalacji](docs/INSTALL.md)
 - [📚 Dokumentacja API](docs/README.md)
-- [🌐 Swagger UI](http://localhost:8000/docs) (po uruchomieniu)
+- [🌐 Swagger UI](http://localhost:${API_PORT}/docs) (po uruchomieniu)
 
 ---
 

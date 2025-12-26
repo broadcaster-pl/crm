@@ -94,25 +94,25 @@ Znaleziono: 10 wydarzeń z 4 źródeł
 ### 2.5 Uruchom API
 
 ```bash
-uvicorn api:app --reload --host 0.0.0.0 --port 8000
+uvicorn api:app --reload --host 0.0.0.0 --port ${API_PORT}
 ```
 
 API dostępne pod:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **Health check**: http://localhost:8000/health
+- **Swagger UI**: http://localhost:${API_PORT}/docs
+- **ReDoc**: http://localhost:${API_PORT}/redoc
+- **Health check**: http://localhost:${API_PORT}/health
 
 ### 2.6 Testuj endpointy
 
 ```bash
 # Pobierz wydarzenia
-curl http://localhost:8000/api/events
+curl http://localhost:${API_PORT}/api/events
 
 # Pobierz statystyki
-curl http://localhost:8000/api/stats
+curl http://localhost:${API_PORT}/api/stats
 
 # Pobierz pakiety
-curl http://localhost:8000/api/packages
+curl http://localhost:${API_PORT}/api/packages
 ```
 
 ---
@@ -235,7 +235,7 @@ Aby frontend komunikował się z API, dodaj konfigurację proxy lub zmień URL-e
 
 ```json
 {
-  "proxy": "http://localhost:8000"
+  "proxy": "http://localhost:${API_PORT}"
 }
 ```
 
@@ -243,7 +243,7 @@ Aby frontend komunikował się z API, dodaj konfigurację proxy lub zmień URL-e
 
 Utwórz `.env`:
 ```
-REACT_APP_API_URL=http://localhost:8000/api
+REACT_APP_API_URL=http://localhost:${API_PORT}/api
 ```
 
 W komponencie użyj:
@@ -258,11 +258,11 @@ const API_URL = process.env.REACT_APP_API_URL || '/api';
 ### Backend
 ```bash
 # Sprawdź health
-curl http://localhost:8000/health
+curl http://localhost:${API_PORT}/health
 # Oczekiwana odpowiedź: {"status":"ok","timestamp":"..."}
 
 # Sprawdź wydarzenia
-curl http://localhost:8000/api/events | python -m json.tool | head -20
+curl http://localhost:${API_PORT}/api/events | python -m json.tool | head -20
 ```
 
 ### Generator dokumentów
@@ -293,10 +293,10 @@ pip install fastapi uvicorn
 cd templates && npm install docx
 ```
 
-### Problem: Port 8000 zajęty
+### Problem: Port ${API_PORT} zajęty
 ```bash
 # Znajdź proces
-lsof -i :8000
+lsof -i :${API_PORT}
 # lub użyj innego portu
 uvicorn api:app --port 8001
 ```

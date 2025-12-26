@@ -40,12 +40,13 @@ RUN mkdir -p /app/data && chown -R streamflow:streamflow /app
 USER streamflow
 
 # Expose port
-EXPOSE 8000
+ENV API_PORT=8004
+EXPOSE ${API_PORT}
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+    CMD python -c "import os, urllib.request; urllib.request.urlopen('http://localhost:%s/health' % os.getenv('API_PORT', '8004'))" || exit 1
 
 # Uruchom aplikację
 WORKDIR /app/backend
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn api:app --host 0.0.0.0 --port ${API_PORT:-8004}"]

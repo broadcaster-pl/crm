@@ -10,12 +10,12 @@
 # ║    make package   - Stwórz paczkę ZIP                                     ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 
-.PHONY: help install test run clean docker-build docker-up docker-down docker-test \
-        generate-docs lint format package publish dev frontend all check
+.PHONY: help install test run stop clean docker-build docker-up docker-down docker-test \
+        generate-docs lint format package publish dev frontend test-gui all check docker-frontend-up
 
 # ============= KONFIGURACJA =============
-PYTHON := python3
-PIP := pip3
+PYTHON := $(shell if [ -x "$(CURDIR)/venv/bin/python3" ]; then echo "$(CURDIR)/venv/bin/python3"; elif [ -x "$(CURDIR)/backend/venv/bin/python3" ]; then echo "$(CURDIR)/backend/venv/bin/python3"; else echo python3; fi)
+PIP := $(shell if [ -x "$(CURDIR)/venv/bin/pip3" ]; then echo "$(CURDIR)/venv/bin/pip3"; elif [ -x "$(CURDIR)/backend/venv/bin/pip3" ]; then echo "$(CURDIR)/backend/venv/bin/pip3"; else echo pip3; fi)
 NPM := npm
 DOCKER := docker
 DOCKER_COMPOSE := docker compose
@@ -23,6 +23,15 @@ PROJECT_NAME := streamflow-mvp
 VERSION := 1.0.0
 IMAGE_NAME := streamflow
 REGISTRY := ghcr.io/softreck
+
+-include .env
+
+API_HOST ?= 0.0.0.0
+API_PORT ?= 8004
+
+export API_HOST
+export API_PORT
+export DATABASE_PATH
 
 # Kolory
 BLUE := \033[34m
@@ -53,7 +62,11 @@ install-backend: ## Zainstaluj zależności Python
 
 install-frontend: ## Zainstaluj zależności React
 	@echo "$(BLUE)→ Instaluję zależności React...$(NC)"
-	cd frontend && $(NPM) install 2>/dev/null || echo "Folder frontend wymaga inicjalizacji projektu React"
+	@if [ -f frontend/package.json ]; then \
+		cd frontend && $(NPM) install; \
+	else \
+		echo "Folder frontend wymaga inicjalizacji projektu React"; \
+	fi
 	@echo "$(GREEN)✓ Frontend gotowy$(NC)"
 
 install-templates: ## Zainstaluj zależności generatora dokumentów
@@ -77,7 +90,8 @@ test-coverage: ## Uruchom testy z pokryciem kodu
 
 test-templates: ## Uruchom testy generatora dokumentów
 	@echo "$(BLUE)→ Uruchamiam testy Node.js...$(NC)"
-	cd templates && $(NPM) test 2>/dev/null || echo "$(YELLOW)Testy Node.js wymagają instalacji Jest$(NC)"
+	cd templates && $(NPM) test
+	@echo "$(GREEN)✓ Testy Node.js zakończone$(NC)"
 
 test-watch: ## Uruchom testy w trybie watch
 	cd backend && $(PYTHON) -m pytest --watch
@@ -85,9 +99,27 @@ test-watch: ## Uruchom testy w trybie watch
 # ============= URUCHOMIENIE =============
 run: ## Uruchom backend (development)
 	@echo "$(BLUE)→ Uruchamiam backend API...$(NC)"
-	@echo "$(GREEN)API dostępne pod: http://localhost:8000$(NC)"
-	@echo "$(GREEN)Swagger UI: http://localhost:8000/docs$(NC)"
-	cd backend && uvicorn api:app --reload --host 0.0.0.0 --port 8000
+	@echo "$(GREEN)API dostępne pod: http://localhost:$(API_PORT)$(NC)"
+	@echo "$(GREEN)Swagger UI: http://localhost:$(API_PORT)/docs$(NC)"
+	cd backend && $(PYTHON) -m uvicorn api:app --reload --host $(API_HOST) --port $(API_PORT)
+
+stop: ## Zatrzymaj backend (local + Docker) i zwolnij port API
+	@echo "$(BLUE)→ Zatrzymuję backend...$(NC)"
+	@$(DOCKER_COMPOSE) stop api 2>/dev/null || true
+	@$(DOCKER_COMPOSE) rm -f api 2>/dev/null || true
+	@if command -v lsof >/dev/null 2>&1; then \
+		PIDS=$$(lsof -ti tcp:$(API_PORT) 2>/dev/null); \
+		if [ -n "$$PIDS" ]; then \
+			echo "$(YELLOW)→ Ubijam proces(y) na porcie $(API_PORT): $$PIDS$(NC)"; \
+			kill $$PIDS 2>/dev/null || true; \
+		fi; \
+	elif command -v fuser >/dev/null 2>&1; then \
+		echo "$(YELLOW)→ Ubijam proces(y) na porcie $(API_PORT) przez fuser$(NC)"; \
+		fuser -k $(API_PORT)/tcp 2>/dev/null || true; \
+	else \
+		echo "$(YELLOW)Brak lsof/fuser - nie mogę automatycznie zwolnić portu $(API_PORT)$(NC)"; \
+	fi
+	@echo "$(GREEN)✓ Zatrzymano$(NC)"
 
 run-sync: ## Uruchom synchronizację wydarzeń
 	@echo "$(BLUE)→ Synchronizuję wydarzenia...$(NC)"
@@ -98,7 +130,14 @@ run-stats: ## Pokaż statystyki
 
 frontend: ## Uruchom frontend (wymaga create-react-app)
 	@echo "$(BLUE)→ Uruchamiam frontend...$(NC)"
-	cd frontend && $(NPM) start
+	cd frontend && $(NPM) run dev -- --host 0.0.0.0 --port 3000
+
+test-gui: ## Uruchom testy GUI (Playwright)
+	@echo "$(BLUE)→ Uruchamiam testy GUI (Playwright)...$(NC)"
+	cd frontend && $(NPM) install
+	cd frontend && npx playwright install
+	cd frontend && $(NPM) run test:gui
+	@echo "$(GREEN)✓ Testy GUI zakończone$(NC)"
 
 dev: ## Uruchom backend + frontend (wymaga tmux lub screen)
 	@echo "$(YELLOW)Uruchom w osobnych terminalach:$(NC)"
@@ -115,7 +154,12 @@ docker-build: ## Zbuduj obrazy Docker
 docker-up: ## Uruchom w Docker (backend)
 	@echo "$(BLUE)→ Uruchamiam kontenery...$(NC)"
 	$(DOCKER_COMPOSE) up -d api
-	@echo "$(GREEN)✓ Backend uruchomiony: http://localhost:8000$(NC)"
+	@echo "$(GREEN)✓ Backend uruchomiony: http://localhost:$(API_PORT)$(NC)"
+
+docker-frontend-up: ## Uruchom frontend (Docker Compose)
+	@echo "$(BLUE)→ Uruchamiam frontend...$(NC)"
+	$(DOCKER_COMPOSE) --profile frontend up -d frontend
+	@echo "$(GREEN)✓ Frontend uruchomiony: http://localhost:3000$(NC)"
 
 docker-down: ## Zatrzymaj kontenery Docker
 	@echo "$(BLUE)→ Zatrzymuję kontenery...$(NC)"
@@ -241,8 +285,8 @@ info: ## Pokaż informacje o projekcie
 	@echo "  $(GREEN)Projekt:$(NC)      $(PROJECT_NAME)"
 	@echo "  $(GREEN)Registry:$(NC)     $(REGISTRY)"
 	@echo ""
-	@echo "  $(GREEN)Backend:$(NC)      http://localhost:8000"
-	@echo "  $(GREEN)Swagger:$(NC)      http://localhost:8000/docs"
+	@echo "  $(GREEN)Backend:$(NC)      http://localhost:$(API_PORT)"
+	@echo "  $(GREEN)Swagger:$(NC)      http://localhost:$(API_PORT)/docs"
 	@echo "  $(GREEN)Frontend:$(NC)     http://localhost:3000"
 	@echo ""
 

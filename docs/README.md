@@ -407,7 +407,7 @@ pip install fastapi uvicorn aiohttp beautifulsoup4 feedparser pydantic
 python aggregator.py --init-db
 
 # Uruchomienie API
-uvicorn api:app --reload --host 0.0.0.0 --port 8000
+uvicorn api:app --reload --host 0.0.0.0 --port ${API_PORT}
 ```
 
 ### Frontend
@@ -470,7 +470,7 @@ node document-generator.js
 | `/api/sync` | POST | Synchronizuj źródła |
 | `/api/stats` | GET | Statystyki |
 
-Pełna dokumentacja API: `http://localhost:8000/docs`
+Pełna dokumentacja API: `http://localhost:${API_PORT}/docs`
 
 ---
 

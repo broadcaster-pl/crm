@@ -306,7 +306,7 @@ cd streamflow-mvp
 cd backend
 pip install fastapi uvicorn aiohttp beautifulsoup4 pydantic
 python aggregator.py --sync
-uvicorn api:app --reload --port 8000
+uvicorn api:app --reload --port ${API_PORT}
 
 # 3. Generator dokumentów
 cd ../templates

@@ -4,7 +4,8 @@
 # === BACKEND CORE ===
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
-pydantic>=2.5.0
+pydantic[email]>=2.5.0
+email-validator>=2.0.0
 
 # === SCRAPING & HTTP ===
 aiohttp>=3.9.0

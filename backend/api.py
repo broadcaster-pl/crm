@@ -15,6 +15,7 @@ from enum import Enum
 import asyncio
 import sqlite3
 import json
+import os
 
 # ============= KONFIGURACJA =============
 
@@ -227,9 +228,11 @@ ADDITIONAL_SERVICES = {
 
 # ============= BAZA DANYCH =============
 
-def get_db():
+DATABASE_PATH = os.getenv("DATABASE_PATH", "streamflow.db")
+
+async def get_db():
     """Generator połączenia z bazą"""
-    conn = sqlite3.connect('streamflow.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
     try:
         yield conn
@@ -578,4 +581,8 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(
+        app,
+        host=os.getenv("API_HOST", "0.0.0.0"),
+        port=int(os.getenv("API_PORT", "8004")),
+    )
