@@ -2,29 +2,29 @@
 # Instalacja: pip install -r requirements.txt
 
 # === BACKEND CORE ===
-fastapi>=0.104.0
+fastapi>=0.104.1
 uvicorn[standard]>=0.24.0
-pydantic[email]>=2.5.0
-email-validator>=2.0.0
+pydantic[email]>=2.14.4
+email-validator>=2.4.0
 
 # === SCRAPING & HTTP ===
-aiohttp>=3.9.0
-beautifulsoup4>=4.12.0
-lxml>=4.9.0
-feedparser>=6.0.0
+aiohttp>=3.14.5
+beautifulsoup4>=4.15.0
+lxml>=4.9.4
+feedparser>=6.0.14
 
 # === DATABASE ===
 # SQLite jest wbudowany w Python
 
 # === TESTING ===
-pytest>=7.4.0
-pytest-asyncio>=0.21.0
+pytest>=7.4.4
+pytest-asyncio>=0.21.2
 pytest-cov>=4.1.0
-httpx>=0.25.0  # Dla TestClient
+httpx>=0.25.2  # Dla TestClient
 
 # === DEV TOOLS ===
-black>=23.0.0
-isort>=5.12.0
+black>=23.12.1
+isort>=5.13.2
 flake8>=6.1.0
 
 # === OPTIONAL: PRODUCTION ===
